@@ -49,6 +49,8 @@ public:
 
     // return the most likely state for each time step
     std::vector<int> backward(const std::vector<int> & observation, const std::vector<T> & initial);
+
+    void print(const std::vector<std::vector<T>> &);
 };
 
 template<typename T>
@@ -69,6 +71,8 @@ void HMM<T>::forward(const std::vector<int> & observation, const std::vector<T> 
             alpha[i][j] *= emission;
         }
     }
+    std::cout<<"------- alpha table --------"<<std::endl;
+    print(alpha);
 }
 
 template<typename T>
@@ -139,17 +143,27 @@ std::vector<int> HMM<T>::backward(const std::vector<int> & observation, const st
     for(int i = size-2; i >= 0 ; --i){
         for(unsigned j = 0; j < states_num; ++j){
             for(unsigned k = 0; k < states_num; ++k){
-                beta[i][j] += beta[i+1][k] * t_probs[k][j] * e_probs[k][observation[i]];
+                beta[i][j] += beta[i+1][k] * t_probs[k][j] * e_probs[k][observation[i+1]];
             }
         }
     }
+
+    std::cout<<"------- beta table --------"<<std::endl;
+    print(beta);
 
     std::vector<int> res(size, 0);
     for(int i = 0; i < size; ++i){
         double tmp1 = 0.0;
         double tmp2 = 0.0;
+        double sum = 0.0;
+
+        for(int j = 0; j < states_num; ++j){
+            sum += alpha[i][j]*beta[i][j];
+        }
+
         for(int j = 0; j < states_num; ++j){
             tmp2 = alpha[i][j]*beta[i][j];
+            //std::cout<<" ** "<<tmp2/sum<<std::endl;
             if(tmp2 > tmp1){
                 res[i] = j;
                 tmp1 = tmp2;
@@ -166,3 +180,15 @@ std::vector<int> HMM<T>::backward(const std::vector<int> & observation, const st
     return res;
 }
 
+template<typename T>
+void HMM<T>::print(const std::vector<std::vector<T>> & p){
+    for (int i = 0; i < p.size(); ++i)
+    {
+        std::cout<<i;
+        for (int j = 0; j < p[0].size(); ++j)
+        {
+            std::cout<<"   "<<p[i][j];
+        }
+        std::cout<<std::endl;
+    }
+}
